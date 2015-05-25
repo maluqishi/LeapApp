@@ -44,9 +44,8 @@ public class MainActivityFragment extends Fragment {
     private TextView frameData;
     private Frame currentFrame;
     private FingerList fingers;
-    private String handInfo = "";
+    private String frameInfo = "";
     private HandList hands;
-
 
     private LeapEventProducer leapEventProducer;
 
@@ -60,9 +59,12 @@ public class MainActivityFragment extends Fragment {
         LinearLayout lmain = (LinearLayout)rootView.findViewById(R.id.layout);
 
         this.leapEventProducer = new LeapEventProducer(uiMessageHandler);
-        this.frameData = new TextView(rootView.getContext());
+        frameData = new TextView(rootView.getContext());
+
         frameData.setText("Leap motion not found. \nMake sure your leap motion is connected to your phone " +
                 "and you have the leap motion data tracking app installed on your phone");
+
+        // Add TextView to UI
         lmain.addView(frameData);
 
         return rootView;
@@ -73,15 +75,19 @@ public class MainActivityFragment extends Fragment {
     }
 
     public void disconnectEvent(Controller controller) {
-        Log.i("LeapMotionTutorial", "Leap Motion Controller disconnect.");
+        frameData.setText("Leap motion disconnected.");
     }
 
     public void frameEvent(Controller controller) {
+        // Reset the text
+        frameInfo = "";
+
+        // Get all the data necessary to produce info
         currentFrame = controller.frame();
         hands = currentFrame.hands();
         fingers = currentFrame.fingers();
 
-        handInfo = "Frame Data: "
+        frameInfo = "Frame Data: "
                 + String.format("\nCurrent Frames Per Seconds: %.0f",
                 currentFrame.currentFramesPerSecond())
                 + "\nTimestamp: " + currentFrame.timestamp() + " μs"
@@ -89,12 +95,14 @@ public class MainActivityFragment extends Fragment {
                 + "\nNumber of fingers: " + fingers.count() + "\n\nHand data: ";
 
         if (hands.count() == 0) {
-            handInfo += "\n\n No hands are detected";
+            frameInfo += "\n\n No hands are detected \n\nFinger data:\n\n No fingers are detected";
         } else {
             generateHandInfo(hands.count());
+            frameInfo += "\n\nFinger data: ";
+            generateFingerInfo(hands.count());
         }
 
-        frameData.setText(handInfo);
+        frameData.setText(frameInfo);
     }
 
     /**
@@ -104,13 +112,13 @@ public class MainActivityFragment extends Fragment {
      */
     private void generateHandInfo(int numberOfHands) {
         for (int i = 0; i < numberOfHands; i++) {
-            handInfo += "\n\nHand ID: " + hands.get(i).id();
+            frameInfo += "\n\nHand ID: " + hands.get(i).id();
             if (hands.get(i).isLeft()) {
-                handInfo += "\nType: left hand";
+                frameInfo += "\nType: left hand";
             } else {
-                handInfo += "\nType: right hand";
+                frameInfo += "\nType: right hand";
             }
-            handInfo += "\nDirection: "
+            frameInfo += "\nDirection: "
                     + String.format("(%.1f,%.1f,%.1f)", hands.get(i)
                     .direction().get(0), hands.get(i).direction()
                     .get(1), hands.get(i).direction().get(2))
@@ -119,6 +127,45 @@ public class MainActivityFragment extends Fragment {
                     .palmPosition().get(0), hands.get(i).palmPosition()
                     .get(1), hands.get(i).palmPosition().get(2))
                     + " mm";
+        }
+    }
+    /**
+     * Generate info for fingers and add to an info array
+     *
+     * @param numberOfHands
+     */
+    private void generateFingerInfo(int numberOfHands) {
+        for (int i = 0; i < numberOfHands; i++) {
+            FingerList temp = hands.get(i).fingers();
+            for (int j = 0; j < temp.count(); j++) {
+                frameInfo += "\n\nFinger ID: " + temp.get(j).id()
+                        + "\nType: ";
+                switch (j) {
+                    case 0:
+                        frameInfo += "Thumb";
+                        break;
+                    case 1:
+                        frameInfo += "Index finger";
+                        break;
+                    case 2:
+                        frameInfo += "Middle finger";
+                        break;
+                    case 3:
+                        frameInfo += "Ring finger";
+                        break;
+                    case 4:
+                        frameInfo += "Pinky finger";
+                        break;
+                }
+                frameInfo += "\nBelongs to hand with ID: "
+                        + hands.get(i).id()
+                        + String.format("\nLength: %.1f mm", temp.get(j)
+                        .length())
+                        + String.format("\nTip position: (%.1f,%.1f,%.1f)",
+                        temp.get(j).tipPosition().get(0), temp.get(j)
+                                .tipPosition().get(1), temp.get(j)
+                                .tipPosition().get(2));
+            }
         }
     }
 
