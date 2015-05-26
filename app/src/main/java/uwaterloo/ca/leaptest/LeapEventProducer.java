@@ -70,5 +70,4 @@ public class LeapEventProducer extends Listener {
         Message message = uiMessageHandler.obtainMessage(FRAME_MESSAGE, controller);
         uiMessageHandler.sendMessage(message);
     }
-
 }

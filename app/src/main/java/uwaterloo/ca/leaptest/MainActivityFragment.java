@@ -21,6 +21,9 @@ import com.leapmotion.leap.*;
  */
 public class MainActivityFragment extends Fragment {
 
+    public static boolean isPause = false;
+    public static boolean isConnect = false;
+
     private Handler uiMessageHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message inputMessage) {
@@ -61,8 +64,11 @@ public class MainActivityFragment extends Fragment {
         this.leapEventProducer = new LeapEventProducer(uiMessageHandler);
         frameData = new TextView(rootView.getContext());
 
-        frameData.setText("Leap motion not found. \nMake sure your leap motion is connected to your phone " +
-                "and you have the leap motion data tracking app installed on your phone");
+        frameData.setText("Leap motion not found" +
+                "\n1)Make sure your leap motion is connected to your phone " +
+                "\n2)Make sure you have the leap motion data tracking app installed on your phone" +
+                "\n3)Make sure you have a green leap motion displayed on the status bar" +
+                "\n4)Reset the phone if everything does not work (Make sure leap motion is connected while resetting");
 
         // Add TextView to UI
         lmain.addView(frameData);
@@ -71,11 +77,12 @@ public class MainActivityFragment extends Fragment {
     }
 
     public void connectEvent(Controller controller) {
-        Log.i("LeapMotionTutorial", "Leap Motion Controller connected.");
+        isConnect = controller.isConnected();
     }
 
     public void disconnectEvent(Controller controller) {
         frameData.setText("Leap motion disconnected.");
+        isConnect = controller.isConnected();
     }
 
     public void frameEvent(Controller controller) {
@@ -83,9 +90,11 @@ public class MainActivityFragment extends Fragment {
         frameInfo = "";
 
         // Get all the data necessary to produce info
-        currentFrame = controller.frame();
-        hands = currentFrame.hands();
-        fingers = currentFrame.fingers();
+        if (!isPause) {
+            currentFrame = controller.frame();
+            hands = currentFrame.hands();
+            fingers = currentFrame.fingers();
+        }
 
         frameInfo = "Frame Data: "
                 + String.format("\nCurrent Frames Per Seconds: %.0f",
@@ -95,7 +104,7 @@ public class MainActivityFragment extends Fragment {
                 + "\nNumber of fingers: " + fingers.count() + "\n\nHand data: ";
 
         if (hands.count() == 0) {
-            frameInfo += "\n\n No hands are detected \n\nFinger data:\n\n No fingers are detected";
+            frameInfo += "\n\nNo hands are detected \n\nFinger data:\n\nNo fingers are detected";
         } else {
             generateHandInfo(hands.count());
             frameInfo += "\n\nFinger data: ";
@@ -119,11 +128,11 @@ public class MainActivityFragment extends Fragment {
                 frameInfo += "\nType: right hand";
             }
             frameInfo += "\nDirection: "
-                    + String.format("(%.1f,%.1f,%.1f)", hands.get(i)
+                    + String.format("%.1f,%.1f,%.1f", hands.get(i)
                     .direction().get(0), hands.get(i).direction()
                     .get(1), hands.get(i).direction().get(2))
                     + "\nPalm position: "
-                    + String.format("(%.1f,%.1f,%.1f)", hands.get(i)
+                    + String.format("%.1f,%.1f,%.1f", hands.get(i)
                     .palmPosition().get(0), hands.get(i).palmPosition()
                     .get(1), hands.get(i).palmPosition().get(2))
                     + " mm";
@@ -161,12 +170,11 @@ public class MainActivityFragment extends Fragment {
                         + hands.get(i).id()
                         + String.format("\nLength: %.1f mm", temp.get(j)
                         .length())
-                        + String.format("\nTip position: (%.1f,%.1f,%.1f)",
+                        + String.format("\nTip position: %.1f,%.1f,%.1f",
                         temp.get(j).tipPosition().get(0), temp.get(j)
                                 .tipPosition().get(1), temp.get(j)
                                 .tipPosition().get(2));
             }
         }
     }
-
 }
