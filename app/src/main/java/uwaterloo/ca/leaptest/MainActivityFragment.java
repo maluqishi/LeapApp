@@ -5,15 +5,21 @@ import android.os.Looper;
 import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.leapmotion.leap.*;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.ArrayList;
+
 
 
 /**
@@ -23,6 +29,9 @@ public class MainActivityFragment extends Fragment {
 
     public static boolean isPause = false;
     public static boolean isConnect = false;
+    private static boolean isStream = false;
+    private static ArrayList<String> streamData = new ArrayList<String>();
+
 
     private Handler uiMessageHandler = new Handler(Looper.getMainLooper()) {
         @Override
@@ -44,7 +53,7 @@ public class MainActivityFragment extends Fragment {
     };
 
     // Declare variable
-    private TextView frameData;
+    public static TextView frameData;
     private Frame currentFrame;
     private FingerList fingers;
     private String frameInfo = "";
@@ -65,10 +74,10 @@ public class MainActivityFragment extends Fragment {
         frameData = new TextView(rootView.getContext());
 
         frameData.setText("Leap motion not found" +
-                "\n1)Make sure your leap motion is connected to your phone " +
-                "\n2)Make sure you have the leap motion data tracking app installed on your phone" +
-                "\n3)Make sure you have a green leap motion displayed on the status bar" +
-                "\n4)Reset the phone if everything does not work (Make sure leap motion is connected while resetting");
+                "\n1) Make sure your leap motion is connected to your phone " +
+                "\n2) Make sure you have the leap motion data tracking app installed on your phone" +
+                "\n3) Make sure you have a green leap motion displayed on the status bar" +
+                "\n4) Reset the phone if everything does not work (Make sure leap motion is connected while resetting");
 
         // Add TextView to UI
         lmain.addView(frameData);
@@ -94,6 +103,26 @@ public class MainActivityFragment extends Fragment {
             currentFrame = controller.frame();
             hands = currentFrame.hands();
             fingers = currentFrame.fingers();
+        }
+
+        // Stream Data
+        if (isStream && hands.count() == 1) {
+            if (hands.get(0).isLeft()) {
+                streamData.add("left");
+            } else {
+                streamData.add("right");
+            }
+            streamData.add(hands.get(0).palmPosition().toString());
+            streamData.add(currentFrame.timestamp() + " μs");
+        } else if (isStream && hands.count() == 2) {
+            if (hands.get(0).isLeft()) {
+                streamData.add("leftright");
+            } else {
+                streamData.add("rightleft");
+            }
+            streamData.add(hands.get(0).palmPosition().toString());
+            streamData.add(hands.get(1).palmPosition().toString());
+            streamData.add(currentFrame.timestamp() + " μs");
         }
 
         frameInfo = "Frame Data: "
@@ -127,6 +156,7 @@ public class MainActivityFragment extends Fragment {
             } else {
                 frameInfo += "\nType: right hand";
             }
+
             frameInfo += "\nDirection: "
                     + String.format("%.1f,%.1f,%.1f", hands.get(i)
                     .direction().get(0), hands.get(i).direction()
@@ -176,5 +206,94 @@ public class MainActivityFragment extends Fragment {
                                 .tipPosition().get(2));
             }
         }
+    }
+
+    public static void saveFile(){
+        try {
+            String timeStamp = new SimpleDateFormat(
+                    "yyyy-MM-dd_HH-mm-ss").format(Calendar
+                    .getInstance().getTime());
+
+            File file = new File("/sdcard/Data_" + timeStamp + ".txt");
+            file.createNewFile();
+
+            FileOutputStream fOut = new FileOutputStream(file);
+            OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+            myOutWriter.append(MainActivityFragment.frameData.getText());
+            myOutWriter.close();
+            fOut.close();
+
+        } catch (Exception e) {
+
+        }
+    }
+
+    public static void startStreaming() {
+        isStream = true;
+    }
+
+    public static void stopStreaming() {
+        isStream = false;
+        try {
+            // Check if there is data in the stream data ArrayList
+            if (streamData.size() == 0) {
+                return;
+            }
+            // Get current system time
+            String timeStamp = new SimpleDateFormat(
+                    "yyyy-MM-dd_HH-mm-ss").format(Calendar
+                    .getInstance().getTime());
+            File file = new File("/sdcard/StreamData_" + timeStamp + ".txt");
+            file.createNewFile();
+
+
+            // Get data from ArrayList and produce a string
+            String temp = "";
+            String previous = " ";
+            for (int i = 0; i < streamData.size() - 4; ) {
+                if (streamData.get(i) == "leftright") {
+                    if (!previous.equals("leftright")) {
+                        temp += "Left Hand Palm Position Streaming Data   Right Hand Palm Position Streaming Data\n";
+                        previous = "leftright";
+                    }
+                    temp += String.format("%-40s%40s%40s\n",
+                            streamData.get(i + 1), streamData.get(i + 2),
+                            streamData.get(i + 3));
+                    i += 4;
+                } else if (streamData.get(i) == "rightleft") {
+                    if (!previous.equals("rightleft")) {
+                        temp += "Right Hand Palm Position Streaming Data   Left Hand Palm Position Streaming Data\n";
+                        previous = "rightleft";
+                    }
+                    temp += String.format("%-40s%40s%40s\n",
+                            streamData.get(i + 1), streamData.get(i + 2),
+                            streamData.get(i + 3));
+                    i += 4;
+                } else if (streamData.get(i) == "right") {
+                    if (!previous.equals("right")) {
+                        temp += "Right Hand Palm Position Streaming Data\n";
+                        previous = "right";
+                    }
+                    temp += String.format("%-40s%40s\n",
+                            streamData.get(i + 1), streamData.get(i + 2));
+                    i += 3;
+                } else if (streamData.get(i) == "left") {
+                    if (!previous.equals("left")) {
+                        temp += "Left Hand Palm Position Streaming Data\n";
+                        previous = "left";
+                    }
+                    temp += String.format("%-40s%40s\n",
+                            streamData.get(i + 1), streamData.get(i + 2));
+                    i += 3;
+                }
+            }
+
+            // Save file to SD card
+            FileOutputStream fOut = new FileOutputStream(file);
+            OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+            myOutWriter.append(temp);
+            myOutWriter.close();
+            fOut.close();
+        } catch (Exception e) {}
     }
 }

@@ -11,7 +11,13 @@
           android:icon="@drawable/resume"
           android:orderInCategory="1"
           app:showAsAction="always"/>
-    <item android:title="Setting"
-          android:id="@+id/setting"
+    <item android:title="Save Data"
+          android:id="@+id/save"
           android:orderInCategory="1"/>
+    <item android:title="Start Streaming"
+          android:id="@+id/startStreaming"
+          android:orderInCategory="2"/>
+    <item android:title="Stop Streaming"
+          android:id="@+id/stopStreaming"
+          android:orderInCategory="3"/>
 </menu>
