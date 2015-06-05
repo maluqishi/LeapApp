@@ -8,8 +8,8 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="Leap Motion Data Collector"
+        android:icon="@drawable/icon"
+        android:label="Leap App"
         android:theme="@style/AppTheme" >
         <activity
             android:name=".MainActivity"

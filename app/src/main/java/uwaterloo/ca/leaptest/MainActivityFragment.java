@@ -1,13 +1,23 @@
 package uwaterloo.ca.leaptest;
 
+import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.TranslateAnimation;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -61,6 +71,12 @@ public class MainActivityFragment extends Fragment {
 
     private LeapEventProducer leapEventProducer;
 
+    private final AlphaAnimation fadeInAnimation1 = new AlphaAnimation(0.0f, 1.0f);
+    private final AlphaAnimation fadeInAnimation2 = new AlphaAnimation(0f, 1f);
+    private final TranslateAnimation translation1 = new TranslateAnimation(-1500,new DisplayMetrics().widthPixels/2,0,0);
+    private final TranslateAnimation translation2 = new TranslateAnimation(1500,new DisplayMetrics().widthPixels/2,0,0);
+
+
     public MainActivityFragment() {
     }
 
@@ -68,20 +84,42 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        LinearLayout lmain = (LinearLayout)rootView.findViewById(R.id.layout);
 
-        this.leapEventProducer = new LeapEventProducer(uiMessageHandler);
-        frameData = new TextView(rootView.getContext());
+        // Configure animation setting
+        animateConfig();
 
-        frameData.setText("Leap motion not found" +
-                "\n1) Make sure your leap motion is connected to your phone " +
-                "\n2) Make sure you have the leap motion data tracking app installed on your phone" +
-                "\n3) Make sure you have a green leap motion displayed on the status bar" +
-                "\n4) Reset the phone if everything does not work (Make sure leap motion is connected while resetting");
+        // Find views and start animations
+        final ImageView logo = (ImageView)rootView.findViewById(R.id.logo);
+        logo.startAnimation(fadeInAnimation1);
 
-        // Add TextView to UI
-        lmain.addView(frameData);
+        TextView intro1 = (TextView) rootView.findViewById(R.id.intro1);
+        intro1.startAnimation(fadeInAnimation1);
 
+        TextView intro2 = (TextView) rootView.findViewById(R.id.intro2);
+        intro2.startAnimation(fadeInAnimation2);
+
+        EditText firstName = (EditText) rootView.findViewById(R.id.firstName);
+        firstName.startAnimation(translation1);
+
+        EditText lastName = (EditText) rootView.findViewById(R.id.lastName);
+        lastName.startAnimation(translation2);
+
+        // Continue button and set onTouchListener (change color)
+        final Button continueButton = (Button)rootView.findViewById(R.id.continueButton);
+        continueButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case (MotionEvent.ACTION_DOWN):
+                        continueButton.setBackgroundColor(Color.parseColor("#559C00"));
+                        return true;
+                    case(MotionEvent.ACTION_UP):
+                        continueButton.setBackgroundColor(Color.parseColor("#6BC300"));
+                        return true;
+                }
+                return false;
+            }
+        });
         return rootView;
     }
 
@@ -295,5 +333,16 @@ public class MainActivityFragment extends Fragment {
             myOutWriter.close();
             fOut.close();
         } catch (Exception e) {}
+    }
+
+    private void animateConfig() {
+        fadeInAnimation1.setDuration(2000);
+        fadeInAnimation1.setStartOffset(1000);
+        fadeInAnimation2.setDuration(2000);
+        fadeInAnimation2.setStartOffset(3000);
+        translation1.setDuration(2000);
+        translation1.setStartOffset(4000);
+        translation2.setDuration(2000);
+        translation2.setStartOffset(4000);
     }
 }
