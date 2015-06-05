@@ -12,14 +12,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.view.animation.TranslateAnimation;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.leapmotion.leap.*;
 
@@ -41,7 +40,7 @@ public class MainActivityFragment extends Fragment {
     public static boolean isConnect = false;
     private static boolean isStream = false;
     private static ArrayList<String> streamData = new ArrayList<String>();
-
+    private boolean isAgree = false;
 
     private Handler uiMessageHandler = new Handler(Looper.getMainLooper()) {
         @Override
@@ -71,11 +70,10 @@ public class MainActivityFragment extends Fragment {
 
     private LeapEventProducer leapEventProducer;
 
-    private final AlphaAnimation fadeInAnimation1 = new AlphaAnimation(0.0f, 1.0f);
+    private final AlphaAnimation fadeInAnimation1 = new AlphaAnimation(0f, 1f);
     private final AlphaAnimation fadeInAnimation2 = new AlphaAnimation(0f, 1f);
     private final TranslateAnimation translation1 = new TranslateAnimation(-1500,new DisplayMetrics().widthPixels/2,0,0);
     private final TranslateAnimation translation2 = new TranslateAnimation(1500,new DisplayMetrics().widthPixels/2,0,0);
-
 
     public MainActivityFragment() {
     }
@@ -83,13 +81,13 @@ public class MainActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         // Configure animation setting
         animateConfig();
 
         // Find views and start animations
-        final ImageView logo = (ImageView)rootView.findViewById(R.id.logo);
+        ImageView logo = (ImageView)rootView.findViewById(R.id.logo);
         logo.startAnimation(fadeInAnimation1);
 
         TextView intro1 = (TextView) rootView.findViewById(R.id.intro1);
@@ -98,10 +96,10 @@ public class MainActivityFragment extends Fragment {
         TextView intro2 = (TextView) rootView.findViewById(R.id.intro2);
         intro2.startAnimation(fadeInAnimation2);
 
-        EditText firstName = (EditText) rootView.findViewById(R.id.firstName);
+        final EditText firstName = (EditText) rootView.findViewById(R.id.firstName);
         firstName.startAnimation(translation1);
 
-        EditText lastName = (EditText) rootView.findViewById(R.id.lastName);
+        final EditText lastName = (EditText) rootView.findViewById(R.id.lastName);
         lastName.startAnimation(translation2);
 
         // Continue button and set onTouchListener (change color)
@@ -109,17 +107,48 @@ public class MainActivityFragment extends Fragment {
         continueButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case (MotionEvent.ACTION_DOWN):
-                        continueButton.setBackgroundColor(Color.parseColor("#559C00"));
-                        return true;
-                    case(MotionEvent.ACTION_UP):
-                        continueButton.setBackgroundColor(Color.parseColor("#6BC300"));
-                        return true;
+                if (isAgree) {
+                    switch (event.getAction()) {
+                        case (MotionEvent.ACTION_DOWN):
+                            continueButton.setBackgroundColor(Color.parseColor("#559C00"));
+                            if (firstName.getText().toString().length() < 2 || lastName.getText().toString().length() < 2) {
+                                Toast.makeText(rootView.getContext(), "Invalid Name",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                            return true;
+                        case (MotionEvent.ACTION_UP):
+                            continueButton.setBackgroundColor(Color.parseColor("#6BC300"));
+                            return true;
+                    }
                 }
                 return false;
             }
         });
+        continueButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (firstName.getText().toString().length() < 2 || lastName.getText().toString().length() < 2) {
+                    Toast.makeText(rootView.getContext(), "Invalid Name",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        continueButton.setAnimation(translation2);
+
+        final CheckBox agree = (CheckBox) rootView.findViewById(R.id.agree);
+        agree.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (agree.isChecked()) {
+                    isAgree = true;
+                    continueButton.setBackgroundColor(Color.parseColor("#6BC300"));
+                } else {
+                    isAgree = false;
+                    continueButton.setBackgroundColor(Color.parseColor("#FF0000"));
+                }
+            }
+        });
+        agree.startAnimation(translation1);
         return rootView;
     }
 
@@ -338,11 +367,11 @@ public class MainActivityFragment extends Fragment {
     private void animateConfig() {
         fadeInAnimation1.setDuration(2000);
         fadeInAnimation1.setStartOffset(1000);
-        fadeInAnimation2.setDuration(2000);
+        fadeInAnimation2.setDuration(1500);
         fadeInAnimation2.setStartOffset(3000);
-        translation1.setDuration(2000);
-        translation1.setStartOffset(4000);
-        translation2.setDuration(2000);
-        translation2.setStartOffset(4000);
+        translation1.setDuration(1500);
+        translation1.setStartOffset(4500);
+        translation2.setDuration(1500);
+        translation2.setStartOffset(4500);
     }
 }
