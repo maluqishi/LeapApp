@@ -1,22 +1,26 @@
 package uwaterloo.ca.leaptest;
 
+import android.app.FragmentTransaction;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.v4.app.Fragment;
+import android.app.Fragment;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,7 +45,6 @@ public class MainActivityFragment extends Fragment {
     private static boolean isStream = false;
     private static ArrayList<String> streamData = new ArrayList<String>();
     private boolean isAgree = false;
-
     private Handler uiMessageHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message inputMessage) {
@@ -72,8 +75,16 @@ public class MainActivityFragment extends Fragment {
 
     private final AlphaAnimation fadeInAnimation1 = new AlphaAnimation(0f, 1f);
     private final AlphaAnimation fadeInAnimation2 = new AlphaAnimation(0f, 1f);
-    private final TranslateAnimation translation1 = new TranslateAnimation(-1500,new DisplayMetrics().widthPixels/2,0,0);
+    private static final TranslateAnimation translation1 = new TranslateAnimation(-1500,new DisplayMetrics().widthPixels/2,0,0);
     private final TranslateAnimation translation2 = new TranslateAnimation(1500,new DisplayMetrics().widthPixels/2,0,0);
+    private static final TranslateAnimation translation3 = new TranslateAnimation(new DisplayMetrics().widthPixels/2,-1500,0,0);
+    private static ImageView logo = null;
+    private static TextView intro1 = null;
+    private static TextView intro2 = null;
+    private static EditText firstName = null;
+    private static EditText lastName = null;
+    private static CheckBox agree = null;
+    private static Button continueButton = null;
 
     public MainActivityFragment() {
     }
@@ -81,29 +92,37 @@ public class MainActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        MainActivity.state = 1;
+
         final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         // Configure animation setting
         animateConfig();
 
         // Find views and start animations
-        ImageView logo = (ImageView)rootView.findViewById(R.id.logo);
+        logo = (ImageView)rootView.findViewById(R.id.logo);
         logo.startAnimation(fadeInAnimation1);
 
-        TextView intro1 = (TextView) rootView.findViewById(R.id.intro1);
+        intro1 = (TextView) rootView.findViewById(R.id.intro1);
         intro1.startAnimation(fadeInAnimation1);
 
-        TextView intro2 = (TextView) rootView.findViewById(R.id.intro2);
+        intro2 = (TextView) rootView.findViewById(R.id.intro2);
         intro2.startAnimation(fadeInAnimation2);
 
-        final EditText firstName = (EditText) rootView.findViewById(R.id.firstName);
+        firstName = (EditText) rootView.findViewById(R.id.firstName);
         firstName.startAnimation(translation1);
 
-        final EditText lastName = (EditText) rootView.findViewById(R.id.lastName);
+        lastName = (EditText) rootView.findViewById(R.id.lastName);
         lastName.startAnimation(translation2);
 
+        agree = (CheckBox) rootView.findViewById(R.id.agree);
+        agree.startAnimation(translation1);
+
+        continueButton = (Button)rootView.findViewById(R.id.continueButton);
+        continueButton.setAnimation(translation2);
+
         // Continue button and set onTouchListener (change color)
-        final Button continueButton = (Button)rootView.findViewById(R.id.continueButton);
         continueButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -111,31 +130,34 @@ public class MainActivityFragment extends Fragment {
                     switch (event.getAction()) {
                         case (MotionEvent.ACTION_DOWN):
                             continueButton.setBackgroundColor(Color.parseColor("#559C00"));
+                            return true;
+                        case (MotionEvent.ACTION_UP):
                             if (firstName.getText().toString().length() < 2 || lastName.getText().toString().length() < 2) {
                                 Toast.makeText(rootView.getContext(), "Invalid Name",
                                         Toast.LENGTH_SHORT).show();
+                            } else {
+                                logo.startAnimation(translation3);
+                                intro1.startAnimation(translation3);
+                                intro2.startAnimation(translation3);
+                                firstName.startAnimation(translation3);
+                                lastName.startAnimation(translation3);
+                                agree.startAnimation(translation3);
+                                continueButton.startAnimation(translation3);
+                                Log.i("FUCK", "" + intro1.getX());
+                                continueButton.setBackgroundColor(Color.parseColor("#6BC300"));
+
+                                final FragmentTransaction ft = getFragmentManager().beginTransaction();
+                                ft.replace(R.id.fragment, new InfoFragment());
+                                ft.commit();
                             }
-                            return true;
-                        case (MotionEvent.ACTION_UP):
-                            continueButton.setBackgroundColor(Color.parseColor("#6BC300"));
                             return true;
                     }
                 }
                 return false;
             }
         });
-        continueButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (firstName.getText().toString().length() < 2 || lastName.getText().toString().length() < 2) {
-                    Toast.makeText(rootView.getContext(), "Invalid Name",
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-        continueButton.setAnimation(translation2);
 
-        final CheckBox agree = (CheckBox) rootView.findViewById(R.id.agree);
+
         agree.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -148,7 +170,7 @@ public class MainActivityFragment extends Fragment {
                 }
             }
         });
-        agree.startAnimation(translation1);
+
         return rootView;
     }
 
@@ -365,13 +387,56 @@ public class MainActivityFragment extends Fragment {
     }
 
     private void animateConfig() {
-        fadeInAnimation1.setDuration(2000);
+        fadeInAnimation1.setDuration(1500);
         fadeInAnimation1.setStartOffset(1000);
         fadeInAnimation2.setDuration(1500);
-        fadeInAnimation2.setStartOffset(3000);
+        fadeInAnimation2.setStartOffset(2500);
         translation1.setDuration(1500);
-        translation1.setStartOffset(4500);
+        translation1.setStartOffset(4000);
         translation2.setDuration(1500);
-        translation2.setStartOffset(4500);
+        translation2.setStartOffset(4000);
+        translation3.setDuration(1500);
+        translation3.setFillAfter(true);
+        translation3.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {}
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                logo.setX(-1500);
+                intro1.setX(-1500);
+                intro2.setX(-1500);
+                firstName.setX(-1500);
+                lastName.setX(-1500);
+                agree.setX(-1500);
+                continueButton.setX(-1500);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {}
+        });
+    }
+
+    public static void backAnimation() {
+        logo.setX(370);
+        intro1.setX(110);
+        intro2.setX(new DisplayMetrics().widthPixels/2);
+        firstName.setX(new DisplayMetrics().widthPixels/2);
+        lastName.setX(new DisplayMetrics().widthPixels/2);
+        agree.setX(new DisplayMetrics().widthPixels/2);
+        continueButton.setX(new DisplayMetrics().widthPixels / 2);
+
+        translation1.setStartOffset(0);
+
+        translation3.cancel();
+
+        logo.startAnimation(translation1);
+        intro1.startAnimation(translation1);
+        intro2.startAnimation(translation1);
+        firstName.startAnimation(translation1);
+        lastName.startAnimation(translation1);
+        agree.startAnimation(translation1);
+        continueButton.startAnimation(translation1);
+
     }
 }

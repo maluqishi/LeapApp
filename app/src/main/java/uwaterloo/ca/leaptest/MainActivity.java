@@ -1,19 +1,24 @@
 package uwaterloo.ca.leaptest;
 
+import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 public class MainActivity extends ActionBarActivity {
 
+    public static int state;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        state = 1;
     }
 
 
@@ -72,4 +77,29 @@ public class MainActivity extends ActionBarActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            switch (state) {
+                case 1:
+                    new AlertDialog.Builder(this)
+                            .setTitle("Really Exit?")
+                            .setMessage("Are you sure you want to exit?")
+                            .setNegativeButton(android.R.string.no, null)
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+                                public void onClick(DialogInterface arg0, int arg1) {
+                                    MainActivity.super.onBackPressed();
+                                }
+                            }).create().show();
+                    return true;
+                case 2:
+                    InfoFragment.backAnimation();
+                    MainActivityFragment.backAnimation();
+                    return true;
+            }
+        }
+        return false;
+    }
+
 }
