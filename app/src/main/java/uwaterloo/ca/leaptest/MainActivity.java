@@ -94,6 +94,7 @@ public class MainActivity extends ActionBarActivity {
                             }).create().show();
                     return true;
                 case 2:
+                    state = 1;
                     InfoFragment.backAnimation();
                     MainActivityFragment.backAnimation();
                     return true;

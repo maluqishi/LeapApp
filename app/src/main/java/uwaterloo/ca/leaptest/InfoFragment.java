@@ -1,17 +1,17 @@
 package uwaterloo.ca.leaptest;
 
 
-import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.app.FragmentManager;
-import android.util.DisplayMetrics;
+import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.view.animation.TranslateAnimation;
+import android.widget.Button;
 import android.widget.TextView;
 
 
@@ -20,15 +20,16 @@ import android.widget.TextView;
  */
 public class InfoFragment extends Fragment {
 
-    private final TranslateAnimation translation1 = new TranslateAnimation(1500,new DisplayMetrics().widthPixels/2,0,0);
-    private static final TranslateAnimation backTranslation = new TranslateAnimation(new DisplayMetrics().widthPixels/2,1500,0,0);
-    private static TextView title = null;
+    private static final AlphaAnimation fadeIn = new AlphaAnimation(0f, 1f);
+    private static final AlphaAnimation fadeOut = new AlphaAnimation(1f, 0f);
 
-    private static FragmentActivity activity;
-    private static FragmentManager manager;
+
+
+    private static TextView title = null;
+    private static Button continueButton = null;
 
     public InfoFragment() {
-        // Required empty public constructor
+
     }
 
 
@@ -39,37 +40,47 @@ public class InfoFragment extends Fragment {
 
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_info, container, false);
-        activity = (FragmentActivity)rootView.getContext();
-        manager = activity.getFragmentManager();
 
         animateConfig();
 
         title = (TextView)rootView.findViewById(R.id.title);
-        title.setAnimation(translation1);
+        title.setAnimation(fadeIn);
+
+
+        continueButton = (Button)rootView.findViewById(R.id.continueButton);
+        continueButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        return true;
+                }
+                return false;
+            }
+        });
+        continueButton.setAnimation(fadeIn);
 
         return rootView;
     }
 
     private void animateConfig() {
-        translation1.setDuration(1500);
-        translation1.setStartOffset(0);
-        backTranslation.setDuration(1500);
-        backTranslation.setStartOffset(0);
-        backTranslation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {}
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                title.setX(1500);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {}
-        });
+        fadeIn.setDuration(1500);
+        fadeIn.setStartOffset(0);
+        fadeOut.setDuration(1500);
+        fadeOut.setStartOffset(0);
+        fadeOut.setFillAfter(true);
     }
 
     public static void backAnimation() {
-        title.startAnimation(backTranslation);
+        title.startAnimation(fadeOut);
+        continueButton.startAnimation(fadeOut);
+    }
+
+    public static void fadeInPlz() {
+        fadeIn.setStartOffset(1500);
+        title.startAnimation(fadeIn);
+        continueButton.startAnimation(fadeIn);
     }
 }

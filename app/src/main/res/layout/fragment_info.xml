@@ -1,18 +1,29 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             tools:context="uwaterloo.ca.leaptest.InfoFragment">
+ <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                 xmlns:tools="http://schemas.android.com/tools"
+                 android:layout_width="match_parent"
+                 android:layout_height="match_parent"
+                 tools:context="uwaterloo.ca.leaptest.InfoFragment">
+     <!-- TODO: Update blank fragment layout -->
+     <uwaterloo.ca.leaptest.CustomTextView
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:text="Your Characteristic"
+         android:id="@+id/title"
+         android:textSize="40dp"
+         android:layout_alignParentTop="true"
+         android:layout_centerHorizontal="true"
+         android:layout_marginTop="20dp"/>
+     <Button
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:text="CONFIRM"
+         android:id="@+id/continueButton"
+         android:width="1500dp"
+         android:background="#FF0000"
+         android:textColor="#FFF"
+         android:layout_alignParentBottom="true"
+         android:layout_alignParentStart="true"
+         android:layout_marginTop="1000dp"/>
 
-    <!-- TODO: Update blank fragment layout -->
-    <uwaterloo.ca.leaptest.CustomTextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Your Characteristic"
-        android:id="@+id/title"
-        android:textSize="40dp"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp"/>
+ </RelativeLayout>
 
-</RelativeLayout>

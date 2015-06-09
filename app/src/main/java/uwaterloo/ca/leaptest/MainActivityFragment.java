@@ -7,20 +7,17 @@ import android.os.Looper;
 import android.os.Message;
 import android.app.Fragment;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -70,19 +67,20 @@ public class MainActivityFragment extends Fragment {
     private FingerList fingers;
     private String frameInfo = "";
     private HandList hands;
-
     private LeapEventProducer leapEventProducer;
+    private float[] originalX = new float[9];
+    private boolean firstTimeVisit = true;
 
-    private final AlphaAnimation fadeInAnimation1 = new AlphaAnimation(0f, 1f);
-    private final AlphaAnimation fadeInAnimation2 = new AlphaAnimation(0f, 1f);
-    private static final TranslateAnimation translation1 = new TranslateAnimation(-1500,new DisplayMetrics().widthPixels/2,0,0);
-    private final TranslateAnimation translation2 = new TranslateAnimation(1500,new DisplayMetrics().widthPixels/2,0,0);
-    private static final TranslateAnimation translation3 = new TranslateAnimation(new DisplayMetrics().widthPixels/2,-1500,0,0);
+    private static final AlphaAnimation fadeIn = new AlphaAnimation(0f, 1f);
+    private static final AlphaAnimation backFadeIn = new AlphaAnimation(0f, 1f);
+    private static final AlphaAnimation fadeOut = new AlphaAnimation(1f, 0f);
     private static ImageView logo = null;
     private static TextView intro1 = null;
     private static TextView intro2 = null;
-    private static EditText firstName = null;
-    private static EditText lastName = null;
+    private static EditText patientID = null;
+    private static EditText age = null;
+    private static RadioButton male = null;
+    private static RadioButton female = null;
     private static CheckBox agree = null;
     private static Button continueButton = null;
 
@@ -102,54 +100,106 @@ public class MainActivityFragment extends Fragment {
 
         // Find views and start animations
         logo = (ImageView)rootView.findViewById(R.id.logo);
-        logo.startAnimation(fadeInAnimation1);
+        logo.startAnimation(fadeIn);
 
         intro1 = (TextView) rootView.findViewById(R.id.intro1);
-        intro1.startAnimation(fadeInAnimation1);
+        intro1.startAnimation(fadeIn);
 
         intro2 = (TextView) rootView.findViewById(R.id.intro2);
-        intro2.startAnimation(fadeInAnimation2);
+        intro2.startAnimation(fadeIn);
 
-        firstName = (EditText) rootView.findViewById(R.id.firstName);
-        firstName.startAnimation(translation1);
+        patientID = (EditText) rootView.findViewById(R.id.patientID);
+        patientID.startAnimation(fadeIn);
 
-        lastName = (EditText) rootView.findViewById(R.id.lastName);
-        lastName.startAnimation(translation2);
+        age = (EditText) rootView.findViewById(R.id.age);
+        age.startAnimation(fadeIn);
+
+        male = (RadioButton) rootView.findViewById(R.id.male);
+        male.startAnimation(fadeIn);
+        male.setOnClickListener(new View.OnClickListener() {
+            // Prevent double gender
+            @Override
+            public void onClick(View v) {
+                male.setChecked(true);
+                if (male.isChecked() && female.isChecked()) {
+                    female.setChecked(false);
+                }
+            }
+        });
+
+        female = (RadioButton) rootView.findViewById(R.id.female);
+        female.startAnimation(fadeIn);
+        female.setOnClickListener(new View.OnClickListener() {
+            // Prevent double gender
+            @Override
+            public void onClick(View v) {
+                female.setChecked(true);
+                if (male.isChecked() && female.isChecked()) {
+                    male.setChecked(false);
+                }
+            }
+        });
 
         agree = (CheckBox) rootView.findViewById(R.id.agree);
-        agree.startAnimation(translation1);
+        agree.startAnimation(fadeIn);
 
         continueButton = (Button)rootView.findViewById(R.id.continueButton);
-        continueButton.setAnimation(translation2);
+        continueButton.setAnimation(fadeIn);
 
         // Continue button and set onTouchListener (change color)
         continueButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if (isAgree) {
+                if (!isAgree) {
+                    Toast.makeText(rootView.getContext(), "You have to agree to participate in this research", Toast.LENGTH_SHORT).show();
+                } else if (patientID.getText().toString().length() == 0 || age.getText().toString().length() == 0 || (!male.isChecked() && !female.isChecked())) {
+                    Toast.makeText(rootView.getContext(), "Invalid Information", Toast.LENGTH_SHORT).show();
+                } else {
                     switch (event.getAction()) {
                         case (MotionEvent.ACTION_DOWN):
                             continueButton.setBackgroundColor(Color.parseColor("#559C00"));
                             return true;
                         case (MotionEvent.ACTION_UP):
-                            if (firstName.getText().toString().length() < 2 || lastName.getText().toString().length() < 2) {
-                                Toast.makeText(rootView.getContext(), "Invalid Name",
-                                        Toast.LENGTH_SHORT).show();
-                            } else {
-                                logo.startAnimation(translation3);
-                                intro1.startAnimation(translation3);
-                                intro2.startAnimation(translation3);
-                                firstName.startAnimation(translation3);
-                                lastName.startAnimation(translation3);
-                                agree.startAnimation(translation3);
-                                continueButton.startAnimation(translation3);
-                                Log.i("FUCK", "" + intro1.getX());
-                                continueButton.setBackgroundColor(Color.parseColor("#6BC300"));
-
-                                final FragmentTransaction ft = getFragmentManager().beginTransaction();
-                                ft.replace(R.id.fragment, new InfoFragment());
-                                ft.commit();
+                            // Get original x position for later use
+                            if (firstTimeVisit) {
+                                originalX[0] = logo.getX();
+                                originalX[1] = intro1.getX();
+                                originalX[2] = intro2.getX();
+                                originalX[3] = patientID.getX();
+                                originalX[4] = age.getX();
+                                originalX[5] = male.getX();
+                                originalX[6] = female.getX();
+                                originalX[7] = agree.getX();
+                                originalX[8] = continueButton.getX();
                             }
+                            // Fade out if every information is filled in
+                            logo.startAnimation(fadeOut);
+                            intro1.startAnimation(fadeOut);
+                            intro2.startAnimation(fadeOut);
+                            patientID.startAnimation(fadeOut);
+                            age.startAnimation(fadeOut);
+                            male.startAnimation(fadeOut);
+                            female.startAnimation(fadeOut);
+                            agree.startAnimation(fadeOut);
+                            continueButton.startAnimation(fadeOut);
+                            continueButton.setBackgroundColor(Color.parseColor("#6BC300"));
+                            // If first time visit, then create an instance of info fragment
+                            // else, just fade in the fragment
+                            if (firstTimeVisit) {
+                                Handler handler = new Handler();
+                                handler.postDelayed(
+                                        new Runnable() {
+                                            public void run() {
+                                                final FragmentTransaction ft = getFragmentManager().beginTransaction();
+                                                ft.replace(R.id.fragment, new InfoFragment());
+                                                ft.commit();
+                                            }
+                                        }, 1500L);
+                            } else {
+                                InfoFragment.fadeInPlz();
+                                MainActivity.state = 2;
+                            }
+                            firstTimeVisit = false;
                             return true;
                     }
                 }
@@ -163,6 +213,7 @@ public class MainActivityFragment extends Fragment {
             public void onClick(View v) {
                 if (agree.isChecked()) {
                     isAgree = true;
+                    // If agree is checked, then change the continue button to green
                     continueButton.setBackgroundColor(Color.parseColor("#6BC300"));
                 } else {
                     isAgree = false;
@@ -387,56 +438,72 @@ public class MainActivityFragment extends Fragment {
     }
 
     private void animateConfig() {
-        fadeInAnimation1.setDuration(1500);
-        fadeInAnimation1.setStartOffset(1000);
-        fadeInAnimation2.setDuration(1500);
-        fadeInAnimation2.setStartOffset(2500);
-        translation1.setDuration(1500);
-        translation1.setStartOffset(4000);
-        translation2.setDuration(1500);
-        translation2.setStartOffset(4000);
-        translation3.setDuration(1500);
-        translation3.setFillAfter(true);
-        translation3.setAnimationListener(new Animation.AnimationListener() {
+        fadeIn.setDuration(1500);
+        fadeIn.setStartOffset(1500);
+        fadeOut.setDuration(1500);
+        fadeOut.setStartOffset(0);
+        fadeOut.setFillAfter(true);
+        fadeOut.setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) {}
+            public void onAnimationStart(Animation animation) {
 
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                logo.setX(-1500);
-                intro1.setX(-1500);
-                intro2.setX(-1500);
-                firstName.setX(-1500);
-                lastName.setX(-1500);
-                agree.setX(-1500);
-                continueButton.setX(-1500);
             }
 
             @Override
-            public void onAnimationRepeat(Animation animation) {}
+            public void onAnimationEnd(Animation animation) {
+                logo.setX(1500);
+                intro1.setX(1500);
+                intro2.setX(1500);
+                patientID.setX(1500);
+                age.setX(1500);
+                male.setX(1500);
+                female.setX(1500);
+                agree.setX(1500);
+                continueButton.setX(1500);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        backFadeIn.setDuration(1500);
+        backFadeIn.setStartOffset(1500);
+        backFadeIn.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                logo.setX(originalX[0]);
+                intro1.setX(originalX[1]);
+                intro2.setX(originalX[2]);
+                patientID.setX(originalX[3]);
+                age.setX(originalX[4]);
+                male.setX(originalX[5]);
+                female.setX(originalX[6]);
+                agree.setX(originalX[7]);
+                continueButton.setX(originalX[8]);
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
         });
     }
 
     public static void backAnimation() {
-        logo.setX(370);
-        intro1.setX(110);
-        intro2.setX(new DisplayMetrics().widthPixels/2);
-        firstName.setX(new DisplayMetrics().widthPixels/2);
-        lastName.setX(new DisplayMetrics().widthPixels/2);
-        agree.setX(new DisplayMetrics().widthPixels/2);
-        continueButton.setX(new DisplayMetrics().widthPixels / 2);
-
-        translation1.setStartOffset(0);
-
-        translation3.cancel();
-
-        logo.startAnimation(translation1);
-        intro1.startAnimation(translation1);
-        intro2.startAnimation(translation1);
-        firstName.startAnimation(translation1);
-        lastName.startAnimation(translation1);
-        agree.startAnimation(translation1);
-        continueButton.startAnimation(translation1);
-
+        logo.startAnimation(backFadeIn);
+        intro1.startAnimation(backFadeIn);
+        intro2.startAnimation(backFadeIn);
+        patientID.startAnimation(backFadeIn);
+        age.startAnimation(backFadeIn);
+        male.startAnimation(backFadeIn);
+        female.startAnimation(backFadeIn);
+        agree.startAnimation(backFadeIn);
+        continueButton.startAnimation(backFadeIn);
     }
 }
