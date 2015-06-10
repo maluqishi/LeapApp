@@ -7,9 +7,9 @@
      <uwaterloo.ca.leaptest.CustomTextView
          android:layout_width="wrap_content"
          android:layout_height="wrap_content"
-         android:text="Your Characteristic"
+         android:text="Setup Your Leap Motion"
          android:id="@+id/title"
-         android:textSize="40dp"
+         android:textSize="35dp"
          android:layout_alignParentTop="true"
          android:layout_centerHorizontal="true"
          android:layout_marginTop="20dp"/>
@@ -24,6 +24,52 @@
          android:layout_alignParentBottom="true"
          android:layout_alignParentStart="true"
          android:layout_marginTop="1000dp"/>
+
+     <uwaterloo.ca.leaptest.CustomTextView
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:textAppearance="?android:attr/textAppearanceLarge"
+         android:text="1) Make sure Leap Daemon Skeletal Data Tracking App is running. A green Leap Motion icon will appear on notification bar.\n2) Try reconnecting Leap Motion using other cables\n3) If nothing happens, please restart the phone while Leap Motion is connected to the phone"
+         android:textSize="15dp"
+         android:layout_marginTop="10dp"
+         android:id="@+id/instruction"
+         android:layout_below="@+id/connectionStatus"
+         android:layout_alignStart="@+id/title"
+         android:layout_alignEnd="@+id/title"/>
+
+     <uwaterloo.ca.leaptest.CustomTextView
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:text="Connection Status: Leap Motion Not Found"
+         android:textColor="#FF0000"
+         android:textSize="19dp"
+         android:id="@+id/connectionStatus"
+         android:layout_below="@+id/title"
+         android:layout_marginTop="10dp"
+         android:layout_centerHorizontal="true"/>
+
+     <Button
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:id="@+id/leftHand"
+         android:background="#C0C0C0"
+         android:width="206dp"
+         android:height="130dp"
+         android:drawableTop="@drawable/left_hand"
+         android:layout_marginBottom="48dp"
+         android:layout_alignParentBottom="true"
+         android:layout_alignParentStart="true"/>
+
+     <Button
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:id="@+id/rightHand"
+         android:background="#C0C0C0"
+         android:width="206dp"
+         android:height="130dp"
+         android:drawableTop="@drawable/right_hand"
+         android:layout_alignTop="@+id/leftHand"
+         android:layout_toEndOf="@+id/leftHand"/>
 
  </RelativeLayout>
 

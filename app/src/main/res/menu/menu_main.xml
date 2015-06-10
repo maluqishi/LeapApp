@@ -6,16 +6,6 @@
           android:icon="@drawable/question"
           android:orderInCategory="1"
           app:showAsAction="always"/>
-    <item android:title="Pause"
-          android:id="@+id/pause"
-          android:icon="@drawable/pause"
-          android:orderInCategory="1"
-          app:showAsAction="always"/>
-    <item android:title="Resume"
-          android:id="@+id/resume"
-          android:icon="@drawable/resume"
-          android:orderInCategory="1"
-          app:showAsAction="always"/>
     <item android:title="Save Data"
           android:id="@+id/save"
           android:orderInCategory="1"/>

@@ -45,16 +45,6 @@ public class MainActivity extends ActionBarActivity {
         }
         if (MainActivityFragment.isConnect) {
             switch (item.getItemId()) {
-                case (R.id.pause):
-                    MainActivityFragment.isPause = true;
-                    Toast.makeText(this, "Paused",
-                            Toast.LENGTH_SHORT).show();
-                    return true;
-                case (R.id.resume):
-                    MainActivityFragment.isPause = false;
-                    Toast.makeText(this, "Resumed",
-                            Toast.LENGTH_SHORT).show();
-                    return true;
                 case (R.id.save):
                     MainActivityFragment.saveFile();
                     Toast.makeText(getBaseContext(),
