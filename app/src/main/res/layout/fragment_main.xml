@@ -18,7 +18,7 @@
      <uwaterloo.ca.leaptest.CustomTextView
          android:layout_width="wrap_content"
          android:layout_height="wrap_content"
-         android:textSize="20dp"
+         android:textSize="19dp"
          android:text="Welcome to Leap Motion Data Collector."
          android:id="@+id/intro1"
          android:layout_alignParentTop="true"
@@ -29,8 +29,8 @@
      <uwaterloo.ca.leaptest.CustomTextView
          android:layout_width="wrap_content"
          android:layout_height="wrap_content"
-         android:textSize="20dp"
-         android:text="Please enter your ID, age and gender"
+         android:textSize="19dp"
+         android:text="Please enter your Patient ID, age and gender"
          android:id="@+id/intro2"
          android:layout_alignParentTop="true"
          android:layout_centerHorizontal="true"

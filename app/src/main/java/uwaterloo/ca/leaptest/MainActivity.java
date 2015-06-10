@@ -32,16 +32,25 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case (R.id.inquiry):
+            case (R.id.aboutAuthor):
                 new AlertDialog.Builder(this)
-                        .setTitle("About Author")
-                        .setMessage("Ernest Wong, a second year Computer Engineering student at University of Waterloo. Learn more about him on: ernesternie.com")
+                        .setTitle("About Author of This App")
+                        .setMessage("Ernest Wong, a second year Computer Engineering student at University of Waterloo. Learn more about him at: ernesternie.com")
                         .setPositiveButton("Back", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                             }
                         })
                         .show();
                 return true;
+            case (R.id.aboutApp):
+                new AlertDialog.Builder(this)
+                        .setTitle("About This App")
+                        .setMessage("This App is aimed to acquire and process sensor data from Leap Motion, and rapidly assess symptoms of concussion.")
+                        .setPositiveButton("Back", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        })
+                        .show();
         }
         if (MainActivityFragment.isConnect) {
             switch (item.getItemId()) {
@@ -88,6 +97,18 @@ public class MainActivity extends ActionBarActivity {
                     InfoFragment.backAnimation();
                     MainActivityFragment.backAnimation();
                     return true;
+                case 3:
+                    InfoFragment.fadeInPlz();
+                    new AlertDialog.Builder(this)
+                            .setTitle("Really Exit?")
+                            .setMessage("Are you sure you want to exit?")
+                            .setNegativeButton(android.R.string.no, null)
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+                                public void onClick(DialogInterface arg0, int arg1) {
+                                    MainActivity.super.onBackPressed();
+                                }
+                            }).create().show();
             }
         }
         return false;

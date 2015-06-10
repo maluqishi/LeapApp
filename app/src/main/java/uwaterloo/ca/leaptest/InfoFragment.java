@@ -1,6 +1,7 @@
 package uwaterloo.ca.leaptest;
 
 
+import android.app.FragmentTransaction;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -16,6 +17,7 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.leapmotion.leap.Controller;
 import com.leapmotion.leap.*;
@@ -26,17 +28,25 @@ import com.leapmotion.leap.*;
  */
 public class InfoFragment extends Fragment {
 
+    // Declare variables
     private static final AlphaAnimation fadeIn = new AlphaAnimation(0f, 1f);
     private static final AlphaAnimation fadeOut = new AlphaAnimation(1f, 0f);
     private static TextView title = null;
     private static TextView connectionStatus = null;
     private static TextView instruction = null;
+    private TextView rightHandData = null;
+    private TextView leftHandData = null;
     private static Button leftHand = null;
     private static Button rightHand = null;
     private static Button continueButton = null;
-    private LeapEventProducer leapEventProducer;
+    private LeapEventProducer leapEventProducer = null;
     private boolean isConnected = false;
     private Frame currentFrame = null;
+    private HandList hands = null;
+    private String rightHandInfo = "";
+    private String leftHandInfo = "";
+    private boolean displayRightHand = false;
+    private boolean displayLeftHand = false;
     private Handler uiMessageHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message inputMessage) {
@@ -58,7 +68,6 @@ public class InfoFragment extends Fragment {
 
     public InfoFragment() { }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -68,7 +77,7 @@ public class InfoFragment extends Fragment {
         MainActivity.state = 2;
 
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_info, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_info, container, false);
 
         animateConfig();
 
@@ -83,10 +92,25 @@ public class InfoFragment extends Fragment {
 
         leftHand = (Button)rootView.findViewById(R.id.leftHand);
         leftHand.startAnimation(fadeIn);
+        leftHand.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isConnected) {
+                    displayLeftHand = !displayLeftHand;
+                }
+            }
+        });
 
         rightHand = (Button)rootView.findViewById(R.id.rightHand);
         rightHand.startAnimation(fadeIn);
-
+        rightHand.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isConnected) {
+                    displayRightHand = !displayRightHand;
+                }
+            }
+        });
         continueButton = (Button)rootView.findViewById(R.id.continueButton);
         continueButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -98,6 +122,20 @@ public class InfoFragment extends Fragment {
                             return true;
                         case MotionEvent.ACTION_UP:
                             continueButton.setBackgroundColor(Color.parseColor("#6BC300"));
+                            title.startAnimation(fadeOut);
+                            connectionStatus.startAnimation(fadeOut);
+                            instruction.startAnimation(fadeOut);
+                            leftHand.startAnimation(fadeOut);
+                            rightHand.startAnimation(fadeOut);
+                            continueButton.startAnimation(fadeOut);
+                            return true;
+                    }
+                } else {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            return true;
+                        case MotionEvent.ACTION_UP:
+                            Toast.makeText(rootView.getContext(), "Leap Motion Not Found", Toast.LENGTH_SHORT).show();
                             return true;
                     }
                 }
@@ -106,6 +144,8 @@ public class InfoFragment extends Fragment {
         });
         continueButton.setAnimation(fadeIn);
 
+        rightHandData = (TextView) rootView.findViewById(R.id.rightHandData);
+        leftHandData = (TextView) rootView.findViewById(R.id.leftHandData);
         return rootView;
     }
 
@@ -151,10 +191,14 @@ public class InfoFragment extends Fragment {
         leftHand.setBackgroundColor(Color.parseColor("#C0C0C0"));
         rightHand.setBackgroundColor(Color.parseColor("#C0C0C0"));
         instruction.setText("1) Make sure Leap Daemon Skeletal Data Tracking App is running. A green Leap Motion icon will appear on notification bar.\n2) Try reconnecting Leap Motion using other cables\n3) If nothing happens, please restart the phone while Leap Motion is connected to the phone");
+        rightHandData.setText("");
+        leftHandData.setText("");
+
     }
 
     public void frameEvent(Controller controller) {
         currentFrame = controller.frame();
+        hands = currentFrame.hands();
 
         // Turn left or right hand button to green
         if (currentFrame.hands().count() == 0) {
@@ -175,5 +219,52 @@ public class InfoFragment extends Fragment {
 
         // Display frames per second
         instruction.setText(String.format("Current Frames Per Seconds: %.0f", currentFrame.currentFramesPerSecond()));
+
+        // Get hand info
+        generateHandInfo(hands.count());
+
+        // Display hand info
+        if (displayRightHand) {
+            rightHandData.setText(rightHandInfo);
+        } else {
+            rightHandData.setText("");
+        }
+        if (displayLeftHand) {
+            leftHandData.setText(leftHandInfo);
+        } else {
+            leftHandData.setText("");
+        }
+    }
+
+    private void generateHandInfo(int numberOfHands) {
+        rightHandInfo = "";
+        leftHandInfo = "";
+        for (int i = 0; i < numberOfHands; i++) {
+            if (hands.get(i).isLeft()) {
+                leftHandInfo += "\n\nHand ID: " + hands.get(i).id();
+                leftHandInfo += "\nType: left hand";
+                leftHandInfo += "\nDirection: "
+                        + String.format("%.1f,%.1f,%.1f", hands.get(i)
+                        .direction().get(0), hands.get(i).direction()
+                        .get(1), hands.get(i).direction().get(2))
+                        + "\nPalm position: "
+                        + String.format("%.0f,%.0f,%.0f", hands.get(i)
+                        .palmPosition().get(0), hands.get(i).palmPosition()
+                        .get(1), hands.get(i).palmPosition().get(2))
+                        + " mm";
+            } else {
+                rightHandInfo += "\n\nHand ID: " + hands.get(i).id();
+                rightHandInfo += "\nType: right hand";
+                rightHandInfo += "\nDirection: "
+                        + String.format("%.1f,%.1f,%.1f", hands.get(i)
+                        .direction().get(0), hands.get(i).direction()
+                        .get(1), hands.get(i).direction().get(2))
+                        + "\nPalm position: "
+                        + String.format("%.0f,%.0f,%.0f", hands.get(i)
+                        .palmPosition().get(0), hands.get(i).palmPosition()
+                        .get(1), hands.get(i).palmPosition().get(2))
+                        + " mm";
+            }
+        }
     }
 }

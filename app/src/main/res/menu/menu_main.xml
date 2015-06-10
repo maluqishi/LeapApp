@@ -1,9 +1,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
-    <item android:title="Inquiry"
-          android:id="@+id/inquiry"
-          android:icon="@drawable/question"
+    <item android:title="About Author"
+          android:id="@+id/aboutAuthor"
+          android:icon="@drawable/aboutauthor"
+          android:maxWidth="2dp"
+          android:maxHeight="2dp"
+          android:orderInCategory="1"
+          app:showAsAction="always"/>
+    <item android:title="About This App"
+          android:id="@+id/aboutApp"
+          android:icon="@drawable/aboutapp"
+          android:maxWidth="2dp"
+          android:maxHeight="2dp"
           android:orderInCategory="1"
           app:showAsAction="always"/>
     <item android:title="Save Data"
