@@ -51,28 +51,12 @@ public class MainActivity extends ActionBarActivity {
                             }
                         })
                         .show();
-        }
-        if (MainActivityFragment.isConnect) {
-            switch (item.getItemId()) {
-                case (R.id.save):
-                    MainActivityFragment.saveFile();
-                    Toast.makeText(getBaseContext(),
-                            "Data Saved on SD card",
-                            Toast.LENGTH_SHORT).show();
-                    return true;
-                case (R.id.startStreaming):
-                    MainActivityFragment.startStreaming();
-                    Toast.makeText(getBaseContext(),
-                            "Start Streaming...",
-                            Toast.LENGTH_SHORT).show();
-                    return true;
-                case (R.id.stopStreaming):
-                    MainActivityFragment.stopStreaming();
-                    Toast.makeText(getBaseContext(),
-                            "Stream Data Saved on SD card",
-                            Toast.LENGTH_SHORT).show();
-                    return true;
-            }
+                return true;
+            case (R.id.reset):
+                if (!BimanualFragment.isPlaying()) {
+                    BimanualFragment.resetTrialNumber();
+                }
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }

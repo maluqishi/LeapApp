@@ -10,12 +10,34 @@
     <uwaterloo.ca.leaptest.CustomTextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Bimanual Coordination Test"
+        android:text="Bimanual Coordination Tasks"
         android:id="@+id/title"
         android:textSize="30dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"/>
+
+    <uwaterloo.ca.leaptest.CustomTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Connection Status: Leap Motion Not Found"
+        android:textColor="#FF0000"
+        android:textSize="19dp"
+        android:id="@+id/connectionStatus"
+        android:layout_below="@+id/title"
+        android:layout_marginTop="10dp"
+        android:layout_centerHorizontal="true"/>
+
+    <uwaterloo.ca.leaptest.CustomTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hand Status: Wrong Hand Gestures"
+        android:textColor="#FF0000"
+        android:textSize="19dp"
+        android:id="@+id/handStatus"
+        android:layout_below="@+id/connectionStatus"
+        android:layout_marginTop="10dp"
+        android:layout_centerHorizontal="true"/>
 
     <Button
         android:layout_width="150dp"
@@ -25,7 +47,8 @@
         android:id="@+id/start"
         android:textColor="#FFF"
         android:layout_alignTop="@+id/stop"
-        android:layout_alignParentStart="true"/>
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="40dp"/>
 
     <Button
         android:layout_width="150dp"
@@ -36,6 +59,37 @@
         android:textColor="#FFF"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginBottom="105dp"/>
+        android:layout_marginBottom="105dp"
+        android:layout_marginRight="40dp"/>
+
+    <uwaterloo.ca.leaptest.CustomTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Trial 1"
+        android:id="@+id/trial"
+        android:textSize="40dp"
+        android:layout_below="@+id/connectionStatus"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"/>
+
+    <uwaterloo.ca.leaptest.CustomSwitch
+        android:layout_below="@+id/trial"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/weight"
+        android:checked="false"
+        android:textSize="20dp"
+        android:layout_centerHorizontal="true"
+        android:text="Weight"/>
+
+    <uwaterloo.ca.leaptest.CustomSwitch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/trialAutomation"
+        android:checked="false"
+        android:textSize="20dp"
+        android:text="Trial Automation"
+        android:layout_below="@+id/weight"
+        android:layout_centerHorizontal="true"/>
 
 </RelativeLayout>
