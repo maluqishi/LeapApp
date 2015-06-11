@@ -53,9 +53,8 @@ public class MainActivity extends ActionBarActivity {
                         .show();
                 return true;
             case (R.id.reset):
-                if (!BimanualFragment.isPlaying()) {
-                    BimanualFragment.resetTrialNumber();
-                }
+                if (!BimanualFragment.isPlaying()) BimanualFragment.resetTrialNumber();
+                else Toast.makeText(this,"You cannot change settings when doing trials",Toast.LENGTH_SHORT).show();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -67,7 +66,7 @@ public class MainActivity extends ActionBarActivity {
                 case 1:
                     new AlertDialog.Builder(this)
                             .setTitle("Really Exit?")
-                            .setMessage("Are you sure you want to exit?")
+                            .setMessage("All unsaved data will be lost. Are you sure you want to exit?")
                             .setNegativeButton(android.R.string.no, null)
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
@@ -82,10 +81,9 @@ public class MainActivity extends ActionBarActivity {
                     MainActivityFragment.backAnimation();
                     return true;
                 case 3:
-                    InfoFragment.fadeInPlz();
                     new AlertDialog.Builder(this)
                             .setTitle("Really Exit?")
-                            .setMessage("Are you sure you want to exit?")
+                            .setMessage("All unsaved data will be lost. Are you sure you want to exit?")
                             .setNegativeButton(android.R.string.no, null)
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 

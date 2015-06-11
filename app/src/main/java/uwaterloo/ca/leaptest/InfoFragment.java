@@ -2,12 +2,14 @@ package uwaterloo.ca.leaptest;
 
 
 import android.app.FragmentTransaction;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -122,12 +124,30 @@ public class InfoFragment extends Fragment {
                             return true;
                         case MotionEvent.ACTION_UP:
                             continueButton.setBackgroundColor(Color.parseColor("#6BC300"));
-                            title.startAnimation(fadeOut);
-                            connectionStatus.startAnimation(fadeOut);
-                            instruction.startAnimation(fadeOut);
-                            leftHand.startAnimation(fadeOut);
-                            rightHand.startAnimation(fadeOut);
-                            continueButton.startAnimation(fadeOut);
+                            new AlertDialog.Builder(rootView.getContext())
+                                    .setTitle("Confirm")
+                                    .setMessage("You cannot make changes to your information beyond this point. Do you want to proceed?")
+                                    .setNegativeButton(android.R.string.no, null)
+                                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface arg0, int arg1) {
+                                            title.startAnimation(fadeOut);
+                                            connectionStatus.startAnimation(fadeOut);
+                                            instruction.startAnimation(fadeOut);
+                                            leftHand.startAnimation(fadeOut);
+                                            rightHand.startAnimation(fadeOut);
+                                            continueButton.startAnimation(fadeOut);
+                                            Handler handler = new Handler();
+                                            handler.postDelayed(
+                                                    new Runnable() {
+                                                        public void run() {
+                                                            final FragmentTransaction ft = getFragmentManager().beginTransaction();
+                                                            ft.replace(R.id.fragment, new BimanualFragment());
+                                                            ft.commit();
+                                                        }
+                                                    }, 1500L);
+                                        }
+                                    }).create().show();
+
                             return true;
                     }
                 } else {

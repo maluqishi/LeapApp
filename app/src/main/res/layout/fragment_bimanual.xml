@@ -73,14 +73,15 @@
         android:layout_marginTop="50dp"/>
 
     <uwaterloo.ca.leaptest.CustomSwitch
-        android:layout_below="@+id/trial"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/weight"
         android:checked="false"
         android:textSize="20dp"
+        android:text="Weight"
+        android:layout_below="@+id/patientID"
         android:layout_centerHorizontal="true"
-        android:text="Weight"/>
+        android:layout_marginTop="10dp"/>
 
     <uwaterloo.ca.leaptest.CustomSwitch
         android:layout_width="wrap_content"
@@ -90,6 +91,25 @@
         android:textSize="20dp"
         android:text="Trial Automation"
         android:layout_below="@+id/weight"
-        android:layout_centerHorizontal="true"/>
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"/>
+
+    <uwaterloo.ca.leaptest.CustomTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Patient ID:"
+        android:id="@+id/patientID"
+        android:layout_below="@+id/trial"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:textSize="20dp"/>
+
+    <uwaterloo.ca.leaptest.CustomTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/fileName"
+        android:layout_below="@+id/trialAutomation"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"/>
 
 </RelativeLayout>

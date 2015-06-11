@@ -4,19 +4,26 @@ package uwaterloo.ca.leaptest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.res.AssetFileDescriptor;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
+import com.leapmotion.leap.Controller;
+
 
 
 /**
@@ -25,17 +32,39 @@ import org.w3c.dom.Text;
 public class BimanualFragment extends Fragment {
 
     // Declare variables
+    private static final AlphaAnimation fadeIn = new AlphaAnimation(0f, 1f);
     private static final MediaPlayer mp = new MediaPlayer();
     private static TextView title = null;
     private static TextView connectionStatus = null;
     private static TextView handStatus = null;
     private static TextView trial = null;
+    private static TextView patientID = null;
     private static Switch weight = null;
     private static Switch trialAutomation = null;
+    private static TextView fileName = null;
     private static Button start = null;
     private static Button stop = null;
     private static int trialNumber = 1;
-
+    private LeapEventProducer leapEventProducer = null;
+    private boolean isConnected = false;
+    private Handler uiMessageHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message inputMessage) {
+            switch (inputMessage.what) {
+                case LeapEventProducer.CONNECT_MESSAGE:
+                    connectEvent((Controller) inputMessage.obj);
+                    break;
+                case LeapEventProducer.DISCONNECT_MESSAGE:
+                    disconnectEvent((Controller) inputMessage.obj);
+                    break;
+                case LeapEventProducer.FRAME_MESSAGE:
+                    frameEvent((Controller) inputMessage.obj);
+                    break;
+                default:
+                    super.handleMessage(inputMessage);
+            }
+        }
+    };
     public BimanualFragment() {
         // Required empty public constructor
     }
@@ -46,12 +75,22 @@ public class BimanualFragment extends Fragment {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_bimanual, container, false);
 
+        MainActivity.state = 3;
+        animateConfig();
+
         //  Initialize  variables
+        leapEventProducer = new LeapEventProducer(uiMessageHandler);
         title = (TextView)rootView.findViewById(R.id.title);
+        title.startAnimation(fadeIn);
+
         connectionStatus = (TextView) rootView.findViewById(R.id.connectionStatus);
+        connectionStatus.startAnimation(fadeIn);
+
         handStatus = (TextView)rootView.findViewById(R.id.handStatus);
+        handStatus.startAnimation(fadeIn);
+
         trial = (TextView) rootView.findViewById(R.id.trial);
-        trial.setOnClickListener(new View.OnClickListener(){
+        trial.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!mp.isPlaying()) {
@@ -74,7 +113,14 @@ public class BimanualFragment extends Fragment {
                                         if (temp > 0) {
                                             trial.setText("Trial " + temp);
                                             trialNumber = temp;
-                                        } else Toast.makeText(rootView.getContext(), "Invalid Trial Number", Toast.LENGTH_SHORT).show();
+                                            if (weight.isChecked()) {
+                                                fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + "_Weight.txt");
+                                            } else {
+                                                fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + ".txt");
+
+                                            }
+                                        } else
+                                            Toast.makeText(rootView.getContext(), "Invalid Trial Number", Toast.LENGTH_SHORT).show();
                                     } catch (NumberFormatException e) {
                                         Toast.makeText(rootView.getContext(), "Invalid Trial Number", Toast.LENGTH_SHORT).show();
                                     }
@@ -92,15 +138,54 @@ public class BimanualFragment extends Fragment {
                 }
             }
         });
+        trial.startAnimation(fadeIn);
+
+        patientID = (TextView)rootView.findViewById(R.id.patientID);
+        patientID.setText("Patient ID: " + MainActivityFragment.getPatientID());
+        patientID.startAnimation(fadeIn);
+
         weight = (Switch) rootView.findViewById(R.id.weight);
+        weight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // Prevent switching when playing sounds
+                if (mp.isPlaying()) {
+                    weight.setChecked(!isChecked);
+                    Toast.makeText(rootView.getContext(), "You cannot change settings when doing trials", Toast.LENGTH_SHORT).show();
+                }
+                if (isChecked) {
+                    fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + "_Weight.txt");
+                } else {
+                    fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + ".txt");
+
+                }
+            }
+        });
+        weight.startAnimation(fadeIn);
+
         trialAutomation = (Switch)rootView.findViewById(R.id.trialAutomation);
+        trialAutomation.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // Prevent switching when playing sounds
+                if (mp.isPlaying()) {
+                    trialAutomation.setChecked(!isChecked);
+                    Toast.makeText(rootView.getContext(), "You cannot change settings when doing trials", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        trialAutomation.startAnimation(fadeIn);
+
+        fileName = (TextView)rootView.findViewById(R.id.fileName);
+        fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + ".txt");
+        fileName.startAnimation(fadeIn);
 
         start = (Button)rootView.findViewById(R.id.start);
         start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
-                    if (!mp.isPlaying()) {
+                    if (!mp.isPlaying() && isConnected) {
                         // Play 1Hz tone
                         mp.reset();
                         AssetFileDescriptor afd;
@@ -108,10 +193,12 @@ public class BimanualFragment extends Fragment {
                         mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
                         mp.prepare();
                         mp.start();
-                    }
+                    } else Toast.makeText(rootView.getContext(),"Please connect Leap Motion to continue ",Toast.LENGTH_SHORT).show();
                 } catch (Exception e) { }
             }
         });
+        start.startAnimation(fadeIn);
+
         stop = (Button)rootView.findViewById(R.id.stop);
         stop.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -121,18 +208,53 @@ public class BimanualFragment extends Fragment {
                     mp.stop();
                     trialNumber++;
                     trial.setText("Trial " + trialNumber);
+                    if (weight.isChecked()) {
+                        fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + "_Weight.txt");
+                    } else {
+                        fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + ".txt");
+
+                    }
                 }
             }
         });
+        stop.startAnimation(fadeIn);
+
         return rootView;
     }
 
     public static void resetTrialNumber () {
         trialNumber = 1;
         trial.setText("Trial " + trialNumber);
+        weight.setChecked(false);
+        trialAutomation.setChecked(false);
+        fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + ".txt");
     }
 
     public static boolean isPlaying() {
         return mp.isPlaying();
+    }
+
+    public void connectEvent(Controller controller) {
+        isConnected = controller.isConnected();
+        connectionStatus.setText("Connection Status: Leap Motion Connected");
+        connectionStatus.setTextColor(Color.parseColor("#6BC300"));
+    }
+
+    public void disconnectEvent(Controller controller) {
+        isConnected = controller.isConnected();
+        connectionStatus.setText("Connection Status: Leap Motion Not Found");
+        connectionStatus.setTextColor(Color.parseColor("#FF0000"));
+
+        mp.stop();
+        Toast.makeText(getActivity().getApplicationContext(),"Leap Motion Disconnected",Toast.LENGTH_SHORT).show();
+    }
+
+    public void frameEvent(Controller controller) {
+
+    }
+
+    private void animateConfig() {
+        fadeIn.setDuration(1500);
+        fadeIn.setStartOffset(0);
     }
 }

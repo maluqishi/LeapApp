@@ -506,4 +506,8 @@ public class MainActivityFragment extends Fragment {
         agree.startAnimation(backFadeIn);
         continueButton.startAnimation(backFadeIn);
     }
+
+    public static String getPatientID() {
+        return patientID.getText().toString();
+    }
 }
