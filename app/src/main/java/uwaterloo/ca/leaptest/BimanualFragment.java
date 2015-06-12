@@ -22,8 +22,14 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.leapmotion.leap.Controller;
+import com.leapmotion.leap.*;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 
 
 /**
@@ -44,6 +50,10 @@ public class BimanualFragment extends Fragment {
     private static TextView fileName = null;
     private static Button start = null;
     private static Button stop = null;
+    private boolean isStream = false;
+    private Frame currentFrame = null;
+    private HandList hands = null;
+    private ArrayList<String> streamData = new ArrayList<String>();
     private static int trialNumber = 1;
     private LeapEventProducer leapEventProducer = null;
     private boolean isConnected = false;
@@ -65,6 +75,7 @@ public class BimanualFragment extends Fragment {
             }
         }
     };
+
     public BimanualFragment() {
         // Required empty public constructor
     }
@@ -75,10 +86,11 @@ public class BimanualFragment extends Fragment {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_bimanual, container, false);
 
+        // CHange state and configure animation
         MainActivity.state = 3;
         animateConfig();
 
-        //  Initialize  variables
+        // Initialize  variables
         leapEventProducer = new LeapEventProducer(uiMessageHandler);
         title = (TextView)rootView.findViewById(R.id.title);
         title.startAnimation(fadeIn);
@@ -98,7 +110,7 @@ public class BimanualFragment extends Fragment {
                     View promptView = layoutInflater.inflate(R.layout.prompts, null);
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(rootView.getContext());
 
-                    // set prompts.xml to be the layout file of the alertdialog builder
+                    // set prompts.xml to be the layout file of the Alert Dialog builder
                     alertDialogBuilder.setView(promptView);
                     final EditText input = (EditText) promptView.findViewById(R.id.userInput);
 
@@ -152,12 +164,12 @@ public class BimanualFragment extends Fragment {
                 if (mp.isPlaying()) {
                     weight.setChecked(!isChecked);
                     Toast.makeText(rootView.getContext(), "You cannot change settings when doing trials", Toast.LENGTH_SHORT).show();
-                }
-                if (isChecked) {
-                    fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + "_Weight.txt");
                 } else {
-                    fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + ".txt");
-
+                    if (isChecked) {
+                        fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + "_Weight.txt");
+                    } else {
+                        fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + ".txt");
+                    }
                 }
             }
         });
@@ -193,6 +205,9 @@ public class BimanualFragment extends Fragment {
                         mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
                         mp.prepare();
                         mp.start();
+
+                        // Start Streaming
+                        startStreaming();
                     } else Toast.makeText(rootView.getContext(),"Please connect Leap Motion to continue ",Toast.LENGTH_SHORT).show();
                 } catch (Exception e) { }
             }
@@ -204,15 +219,20 @@ public class BimanualFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (mp.isPlaying()) {
+                    // Stop streaming data
+                    stopStreaming();
+                    Toast.makeText(rootView.getContext(),"File saved to SDCard",Toast.LENGTH_SHORT).show();
+
                     // Increment trial number when stop
                     mp.stop();
                     trialNumber++;
                     trial.setText("Trial " + trialNumber);
+
+                    // Change file name
                     if (weight.isChecked()) {
                         fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + "_Weight.txt");
                     } else {
                         fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + ".txt");
-
                     }
                 }
             }
@@ -250,7 +270,95 @@ public class BimanualFragment extends Fragment {
     }
 
     public void frameEvent(Controller controller) {
+        // Get Frame Data
+        currentFrame = controller.frame();
+        hands = currentFrame.hands();
 
+        // Stream Data
+        if (isStream && hands.count() == 1) {
+            if (hands.get(0).isLeft()) {
+                streamData.add("left");
+            } else {
+                streamData.add("right");
+            }
+            streamData.add(hands.get(0).palmPosition().toString());
+            streamData.add(currentFrame.timestamp() + " μs");
+        } else if (isStream && hands.count() == 2) {
+            if (hands.get(0).isLeft()) {
+                streamData.add("leftright");
+            } else {
+                streamData.add("rightleft");
+            }
+            streamData.add(hands.get(0).palmPosition().toString());
+            streamData.add(hands.get(1).palmPosition().toString());
+            streamData.add(currentFrame.timestamp() + " μs");
+        }
+    }
+
+    private void startStreaming() {
+        isStream = true;
+        streamData.clear();
+    }
+
+    private void stopStreaming() {
+        isStream = false;
+        try {
+            // Check if there is data in the stream data ArrayList
+            if (streamData.size() == 0) {
+                return;
+            }
+            // Get current system time
+            File file = new File("/sdcard/" + fileName.getText().toString().substring(29,fileName.getText().toString().length()));
+            file.createNewFile();
+
+            // Get data from ArrayList and produce a string
+            String temp = "";
+            String previous = " ";
+            for (int i = 0; i < streamData.size() - 4; ) {
+                if (streamData.get(i) == "leftright") {
+                    if (!previous.equals("leftright")) {
+                        temp += "Left Hand Palm Position Streaming Data   Right Hand Palm Position Streaming Data\n";
+                        previous = "leftright";
+                    }
+                    temp += String.format("%-40s%40s%40s\n",
+                            streamData.get(i + 1), streamData.get(i + 2),
+                            streamData.get(i + 3));
+                    i += 4;
+                } else if (streamData.get(i) == "rightleft") {
+                    if (!previous.equals("rightleft")) {
+                        temp += "Right Hand Palm Position Streaming Data   Left Hand Palm Position Streaming Data\n";
+                        previous = "rightleft";
+                    }
+                    temp += String.format("%-40s%40s%40s\n",
+                            streamData.get(i + 1), streamData.get(i + 2),
+                            streamData.get(i + 3));
+                    i += 4;
+                } else if (streamData.get(i) == "right") {
+                    if (!previous.equals("right")) {
+                        temp += "Right Hand Palm Position Streaming Data\n";
+                        previous = "right";
+                    }
+                    temp += String.format("%-40s%40s\n",
+                            streamData.get(i + 1), streamData.get(i + 2));
+                    i += 3;
+                } else if (streamData.get(i) == "left") {
+                    if (!previous.equals("left")) {
+                        temp += "Left Hand Palm Position Streaming Data\n";
+                        previous = "left";
+                    }
+                    temp += String.format("%-40s%40s\n",
+                            streamData.get(i + 1), streamData.get(i + 2));
+                    i += 3;
+                }
+            }
+
+            // Save file to SD card
+            FileOutputStream fOut = new FileOutputStream(file);
+            OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+            myOutWriter.append(temp);
+            myOutWriter.close();
+            fOut.close();
+        } catch (Exception e) { }
     }
 
     private void animateConfig() {
