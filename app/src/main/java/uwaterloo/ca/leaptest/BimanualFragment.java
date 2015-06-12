@@ -1,6 +1,5 @@
 package uwaterloo.ca.leaptest;
 
-
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.res.AssetFileDescriptor;
@@ -27,14 +26,8 @@ import com.leapmotion.leap.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 
-
-/**
- * A simple {@link Fragment} subclass.
- */
 public class BimanualFragment extends Fragment {
 
     // Declare variables
@@ -53,6 +46,8 @@ public class BimanualFragment extends Fragment {
     private boolean isStream = false;
     private Frame currentFrame = null;
     private HandList hands = null;
+    private float previous = 0;
+    private boolean isFirstElement;
     private ArrayList<String> streamData = new ArrayList<String>();
     private static int trialNumber = 1;
     private LeapEventProducer leapEventProducer = null;
@@ -76,9 +71,7 @@ public class BimanualFragment extends Fragment {
         }
     };
 
-    public BimanualFragment() {
-        // Required empty public constructor
-    }
+    public BimanualFragment() { }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -129,7 +122,6 @@ public class BimanualFragment extends Fragment {
                                                 fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + "_Weight.txt");
                                             } else {
                                                 fileName.setText("Data will be saved to SDCard/" + MainActivityFragment.getPatientID() + "_Trial_" + trialNumber + ".txt");
-
                                             }
                                         } else
                                             Toast.makeText(rootView.getContext(), "Invalid Trial Number", Toast.LENGTH_SHORT).show();
@@ -282,7 +274,18 @@ public class BimanualFragment extends Fragment {
                 streamData.add("right");
             }
             streamData.add(hands.get(0).palmPosition().toString());
-            streamData.add(currentFrame.timestamp() + " μs");
+            if (hands.get(0).palmPosition().getY() <= previous) {
+                isFirstElement = true;
+                streamData.add(currentFrame.timestamp() + " μs");
+            } else {
+                if (isFirstElement) {
+                    streamData.add(currentFrame.timestamp() + " μs -");
+                    isFirstElement = false;
+                } else {
+                    streamData.add(currentFrame.timestamp() + " μs");
+                }
+            }
+            previous = hands.get(0).palmPosition().getY();
         } else if (isStream && hands.count() == 2) {
             if (hands.get(0).isLeft()) {
                 streamData.add("leftright");
@@ -307,7 +310,7 @@ public class BimanualFragment extends Fragment {
             if (streamData.size() == 0) {
                 return;
             }
-            // Get current system time
+            // Get file name
             File file = new File("/sdcard/" + fileName.getText().toString().substring(29,fileName.getText().toString().length()));
             file.createNewFile();
 
