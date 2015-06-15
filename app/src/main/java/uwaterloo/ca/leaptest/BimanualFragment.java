@@ -48,6 +48,7 @@ public class BimanualFragment extends Fragment {
     private HandList hands = null;
     private float previous = 0;
     private boolean isFirstElement;
+    private int counter = 0;
     private ArrayList<String> streamData = new ArrayList<String>();
     private static int trialNumber = 1;
     private LeapEventProducer leapEventProducer = null;
@@ -262,9 +263,27 @@ public class BimanualFragment extends Fragment {
     }
 
     public void frameEvent(Controller controller) {
+        counter++;
+
         // Get Frame Data
         currentFrame = controller.frame();
         hands = currentFrame.hands();
+
+        // Display hand status
+        if (hands.count() == 0) {
+            handStatus.setText("Hand Status: No Hands Detected");
+            handStatus.setTextColor(Color.parseColor("#FF0000"));
+        } else if (hands.count() == 1){
+            handStatus.setTextColor(Color.parseColor("#6BC300"));
+            if (hands.get(0).isLeft()) {
+                handStatus.setText("Hand Status: Left Hand Detected");
+            } else {
+                handStatus.setText("Hand Status: Right Hand Detected");
+            }
+        } else {
+            handStatus.setTextColor(Color.parseColor("#6BC300"));
+            handStatus.setText("Hand Status: Both Hand Detected");
+        }
 
         // Stream Data
         if (isStream && hands.count() == 1) {
@@ -278,14 +297,14 @@ public class BimanualFragment extends Fragment {
                 isFirstElement = true;
                 streamData.add(currentFrame.timestamp() + " μs");
             } else {
-                if (isFirstElement) {
+                if (isFirstElement && counter > 40) {
                     streamData.add(currentFrame.timestamp() + " μs -");
                     isFirstElement = false;
+                    counter = 0;
                 } else {
                     streamData.add(currentFrame.timestamp() + " μs");
                 }
             }
-            previous = hands.get(0).palmPosition().getY();
         } else if (isStream && hands.count() == 2) {
             if (hands.get(0).isLeft()) {
                 streamData.add("leftright");
@@ -294,8 +313,20 @@ public class BimanualFragment extends Fragment {
             }
             streamData.add(hands.get(0).palmPosition().toString());
             streamData.add(hands.get(1).palmPosition().toString());
-            streamData.add(currentFrame.timestamp() + " μs");
+            if (hands.get(0).palmPosition().getY() <= previous) {
+                isFirstElement = true;
+                streamData.add(currentFrame.timestamp() + " μs");
+            } else {
+                if (isFirstElement && counter > 40) {
+                    streamData.add(currentFrame.timestamp() + " μs -");
+                    isFirstElement = false;
+                    counter = 0;
+                } else {
+                    streamData.add(currentFrame.timestamp() + " μs");
+                }
+            }
         }
+        previous = hands.get(0).palmPosition().getY();
     }
 
     private void startStreaming() {

@@ -4,9 +4,6 @@
              android:layout_height="match_parent"
              tools:context="uwaterloo.ca.leaptest.BimanualFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-
-
     <uwaterloo.ca.leaptest.CustomTextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -31,7 +28,7 @@
     <uwaterloo.ca.leaptest.CustomTextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hand Status: Wrong Hand Gestures"
+        android:text="Hand Status: No Hands Detected"
         android:textColor="#FF0000"
         android:textSize="19dp"
         android:id="@+id/handStatus"
