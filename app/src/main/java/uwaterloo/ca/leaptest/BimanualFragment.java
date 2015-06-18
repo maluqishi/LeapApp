@@ -2,6 +2,7 @@ package uwaterloo.ca.leaptest;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Color;
 import android.media.MediaPlayer;
@@ -43,15 +44,24 @@ public class BimanualFragment extends Fragment {
     private static TextView fileName = null;
     private static Button start = null;
     private static Button stop = null;
+    private static Button dataVerification = null;
     private boolean isStream = false;
     private Frame currentFrame = null;
     private HandList hands = null;
+    private FingerList fingers = null;
     private float previous = 0;
     private boolean isFirstElement;
     private int counter = 0;
     private ArrayList<String> streamData = new ArrayList<String>();
     private static int trialNumber = 1;
     private LeapEventProducer leapEventProducer = null;
+    private long previousTimeStamp = 0;
+    private long maxDeltaTimeStamp = 0;
+    private boolean isFirstFrame = true;
+    // Help us calculate average frequency of your hand movement
+    private ArrayList<String> averageFrequency = new ArrayList<String>();
+    // Data verification data
+    private static ArrayList<String> dataVerificationData = new ArrayList<String>();
     private boolean isConnected = false;
     private Handler uiMessageHandler = new Handler(Looper.getMainLooper()) {
         @Override
@@ -232,6 +242,15 @@ public class BimanualFragment extends Fragment {
         });
         stop.startAnimation(fadeIn);
 
+        dataVerification = (Button) rootView.findViewById(R.id.dataVerification);
+        dataVerification.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(rootView.getContext(), DataVerification.class);
+                startActivity(intent);
+            }
+        });
+        dataVerification.startAnimation(fadeIn);
         return rootView;
     }
 
@@ -268,6 +287,7 @@ public class BimanualFragment extends Fragment {
         // Get Frame Data
         currentFrame = controller.frame();
         hands = currentFrame.hands();
+        fingers = hands.get(0).fingers();
 
         // Display hand status
         if (hands.count() == 0) {
@@ -292,13 +312,14 @@ public class BimanualFragment extends Fragment {
             } else {
                 streamData.add("right");
             }
-            streamData.add(hands.get(0).palmPosition().toString());
-            if (hands.get(0).palmPosition().getY() <= previous) {
+            streamData.add(fingers.get(1).tipPosition().toString());
+            if (fingers.get(1).tipPosition().getY() <= previous) {
                 isFirstElement = true;
                 streamData.add(currentFrame.timestamp() + " μs");
             } else {
                 if (isFirstElement && counter > 40) {
                     streamData.add(currentFrame.timestamp() + " μs -");
+                    averageFrequency.add("" + currentFrame.timestamp());
                     isFirstElement = false;
                     counter = 0;
                 } else {
@@ -319,6 +340,7 @@ public class BimanualFragment extends Fragment {
             } else {
                 if (isFirstElement && counter > 40) {
                     streamData.add(currentFrame.timestamp() + " μs -");
+                    averageFrequency.add("" + currentFrame.timestamp());
                     isFirstElement = false;
                     counter = 0;
                 } else {
@@ -326,12 +348,25 @@ public class BimanualFragment extends Fragment {
                 }
             }
         }
-        previous = hands.get(0).palmPosition().getY();
+
+        if (!isFirstFrame && isStream) {
+            if ((currentFrame.timestamp() - previousTimeStamp) > maxDeltaTimeStamp) {
+                maxDeltaTimeStamp = currentFrame.timestamp() - previousTimeStamp;
+            }
+        }
+
+        isFirstFrame = false;
+        previousTimeStamp = currentFrame.timestamp();
+        previous = fingers.get(1).tipPosition().getY();
     }
 
     private void startStreaming() {
         isStream = true;
         streamData.clear();
+        isFirstFrame = true;
+        averageFrequency.clear();
+        previousTimeStamp = 0;
+        maxDeltaTimeStamp = 0;
     }
 
     private void stopStreaming() {
@@ -392,11 +427,30 @@ public class BimanualFragment extends Fragment {
             myOutWriter.append(temp);
             myOutWriter.close();
             fOut.close();
+
+            // Data Verification (af = average frequency)
+            double af = 0;
+            for (int i = 1; i < averageFrequency.size(); i++) {
+                af += (double)(Long.parseLong(averageFrequency.get(i))-Long.parseLong(averageFrequency.get(i-1)));
+            }
+            if (af != 0) {
+                af /= averageFrequency.size()-1;
+                af = 1/(af*0.000001);
+            }
+
+            dataVerificationData.add(fileName.getText().toString().substring(29, fileName.getText().toString().length()));
+            dataVerificationData.add("" + maxDeltaTimeStamp/1000);
+            dataVerificationData.add(String.format("%.3f",af));
+
         } catch (Exception e) { }
     }
 
     private void animateConfig() {
         fadeIn.setDuration(1500);
         fadeIn.setStartOffset(0);
+    }
+
+    public static ArrayList<String> getData() {
+        return dataVerificationData;
     }
 }

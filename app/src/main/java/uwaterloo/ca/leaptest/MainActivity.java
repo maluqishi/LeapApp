@@ -53,12 +53,12 @@ public class MainActivity extends ActionBarActivity {
                         .show();
                 return true;
             case (R.id.reset):
-                if (MainActivityFragment.isConnect) {
+                try {
                     if (!BimanualFragment.isPlaying())
                         BimanualFragment.resetTrialNumber();
                     else
                         Toast.makeText(this, "You cannot change settings when doing trials", Toast.LENGTH_SHORT).show();
-                }
+                } catch (Exception e) { }
                 return true;
         }
         return super.onOptionsItemSelected(item);

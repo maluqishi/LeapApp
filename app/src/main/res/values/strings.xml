@@ -7,4 +7,5 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_test">Test</string>
     <string name="title_activity_info">InfoActivity</string>
+    <string name="title_activity_data_verification">DataVerification</string>
 </resources>
