@@ -212,7 +212,7 @@ public class BimanualFragment extends Fragment {
 
                         // Start Streaming
                         startStreaming();
-                    } else Toast.makeText(rootView.getContext(),"Please connect Leap Motion to continue ",Toast.LENGTH_SHORT).show();
+                    } else if (!isConnected) Toast.makeText(rootView.getContext(),"Please connect Leap Motion to continue ",Toast.LENGTH_SHORT).show();
                 } catch (Exception e) { }
             }
         });

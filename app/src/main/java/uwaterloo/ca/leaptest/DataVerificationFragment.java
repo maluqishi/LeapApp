@@ -50,7 +50,6 @@ public class DataVerificationFragment extends Fragment {
         try {
             File file = new File("/sdcard/" + MainActivityFragment.getPatientID() + "_Data_Verification.txt");
             file.createNewFile();
-
             // Save file to SD card
             FileOutputStream fOut = new FileOutputStream(file);
             OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);

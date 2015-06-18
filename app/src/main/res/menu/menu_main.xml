@@ -18,10 +18,4 @@
     <item android:title="Reset Trial"
           android:id="@+id/reset"
           android:orderInCategory="1"/>
-    <item android:title="Instruction"
-          android:id="@+id/instruction"
-          android:orderInCategory="1"/>
-    <item android:title="Setting"
-          android:id="@+id/setting"
-          android:orderInCategory="2"/>
 </menu>

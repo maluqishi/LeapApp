@@ -29,9 +29,10 @@ public class graphFragment extends Fragment {
 
         graph = new LineGraphView(rootView.getContext(),100, Arrays.asList(
                 "x", "y", "z"));
-
         RelativeLayout rl = (RelativeLayout)rootView.findViewById(R.id.layout);
+
         rl.addView(graph);
+
         graph.setVisibility(View.VISIBLE);
 
         return rootView;
