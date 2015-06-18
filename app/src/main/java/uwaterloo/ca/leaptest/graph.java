@@ -4,22 +4,21 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 
-public class DataVerification extends ActionBarActivity {
+public class graph extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_data_verification);
+        setContentView(R.layout.activity_graph);
     }
 
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_data_verification, menu);
+        getMenuInflater().inflate(R.menu.menu_graph, menu);
         return true;
     }
 
@@ -31,9 +30,7 @@ public class DataVerification extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.download) {
-            DataVerificationFragment.downloadLog();
-            Toast.makeText(this, "Log Saved to SDCard",Toast.LENGTH_SHORT).show();
+        if (id == R.id.action_settings) {
             return true;
         }
 

@@ -112,7 +112,7 @@
         android:layout_marginTop="10dp"/>
 
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="206dp"
         android:layout_height="wrap_content"
         android:text="Data Verification"
         android:textColor="#FFF"
@@ -121,5 +121,15 @@
         android:width="1000dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"/>
+
+    <Button
+        android:layout_width="206dp"
+        android:layout_height="wrap_content"
+        android:text="Graph"
+        android:textColor="#FFF"
+        android:background="#6BC300"
+        android:id="@+id/graph"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"/>
 
 </RelativeLayout>

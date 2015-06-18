@@ -24,8 +24,11 @@
         </activity>
         <activity
             android:name=".DataVerification"
-            android:label="Data Verification">
+            android:label="Data Verification" >
+        </activity>
+        <activity
+            android:name=".graph"
+            android:label="Graph" >
         </activity>
     </application>
-
 </manifest>

@@ -45,6 +45,7 @@ public class BimanualFragment extends Fragment {
     private static Button start = null;
     private static Button stop = null;
     private static Button dataVerification = null;
+    private static Button graph = null;
     private boolean isStream = false;
     private Frame currentFrame = null;
     private HandList hands = null;
@@ -246,11 +247,20 @@ public class BimanualFragment extends Fragment {
         dataVerification.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(rootView.getContext(), DataVerification.class);
-                startActivity(intent);
+                startActivity( new Intent(rootView.getContext(), DataVerification.class));
             }
         });
         dataVerification.startAnimation(fadeIn);
+
+        graph = (Button) rootView.findViewById(R.id.graph);
+        graph.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(rootView.getContext(), graph.class));
+            }
+        });
+        graph.startAnimation(fadeIn);
+
         return rootView;
     }
 
@@ -358,6 +368,11 @@ public class BimanualFragment extends Fragment {
         isFirstFrame = false;
         previousTimeStamp = currentFrame.timestamp();
         previous = fingers.get(1).tipPosition().getY();
+
+        if (graphFragment.isInitialize) {
+            float[] dataPoint = {fingers.get(1).tipPosition().getX(), fingers.get(1).tipPosition().getY(), fingers.get(1).tipPosition().getZ()};
+            graphFragment.graph.addPoint(dataPoint);
+        }
     }
 
     private void startStreaming() {
